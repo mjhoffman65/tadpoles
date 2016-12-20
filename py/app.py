@@ -62,10 +62,10 @@ class DownloadError(Exception):
 class Client:
 
     COOKIE_FILE = "state/cookies.pkl"
-    ROOT_URL = "http://tadpoles.com/"
+    ROOT_URL = "http://tadpoles.com/home_or_work"
     HOME_URL = "https://www.tadpoles.com/parents"
     MIN_SLEEP = 1
-    MAX_SLEEP = 3
+    MAX_SLEEP = 5
 
     def __init__(self):
         self.init_logging()
@@ -135,7 +135,7 @@ class Client:
         all_windows = set(self.br.window_handles)
         current_window = set([self.br.current_window_handle])
         other_window = (all_windows - current_window).pop()
-        br.switch_to.window(other_window)
+        self.br.switch_to.window(other_window)
 
     def do_login(self):
         # Navigate to login page.
@@ -160,11 +160,11 @@ class Client:
         # Enter 2FA pin.
         pin = self.br.find_element_by_id("idvPreregisteredPhonePin")
         pin.send_keys(getpass("Enter google verification code: "))
-        pin.submit()
+        self.br.find_element_by_id('submit').click()
 
         # Click "approve".
         self.info("Sleeping 2 seconds.")
-        self.sleep(minsleep=2)
+        self.sleep(minsleep=4)
         self.info("Clicking 'approve' button.")
         self.br.find_element_by_id("submit_approve_access").click()
 
@@ -259,6 +259,7 @@ class Client:
         try:
             self.load_cookies()
         except FileNotFoundError:
+            self.cookies = []
             self.do_login()
             self.dump_cookies()
         else:
